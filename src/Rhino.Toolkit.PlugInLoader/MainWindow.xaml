@@ -1,0 +1,86 @@
+﻿<Window x:Class="Rhino.Toolkit.PlugInLoader.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Rhino.Toolkit.PlugInLoader"
+        xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="PlugInLoader" Height="600" Width="550">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="Lime" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+                <ResourceDictionary>
+                    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource MaterialDesignTextBox}">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <GroupBox Header="PlugIns">
+            <TreeView x:Name="treeView" ItemsSource="{Binding PlugInTreeView}">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding IsChecked}"></CheckBox>
+                            <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectedItemChanged">
+                        <i:InvokeCommandAction
+                        Command="{Binding SelectedItemChangedCommand}"
+                        CommandParameter="{Binding SelectedItem, ElementName=treeView}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+        </GroupBox>
+        <Grid Grid.Row="1" Margin="0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="2*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" Content="Name:" HorizontalAlignment="Left" VerticalAlignment="Center"></Label>
+                <TextBox Grid.Row="1" x:Name="TB_AssemblyName" Text="{Binding SelectedPlugInTreeViewItem.Name}" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2"/>
+                <Label Grid.Row="2" Content="Path:" HorizontalAlignment="Left" VerticalAlignment="Center"></Label>
+                <TextBox Grid.Row="3" x:Name="TB_AssemblyPath" Text="{Binding SelectedPlugInTreeViewItem.FilePath}" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2" VerticalAlignment="Stretch"/>
+                <Label Grid.Row="4" Content="Note:" HorizontalAlignment="Left" VerticalAlignment="Center" ></Label>
+                <TextBox Grid.Row="5" x:Name="TB_AssemblyInfo" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2"/>
+            </Grid>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Button Grid.Row="0" Content="Run" Name="Btn_Run" Width="70" Height="30" Command="{Binding RunCommand}"></Button>
+                <Button Grid.Row="1" Content="Load" Name="Btn_Load" Width="70" Height="30" Command="{Binding LoadCommand}"></Button>
+                <Button Grid.Row="2" Content="Remove" Name="Btn_Remove" Width="70" Height="30" Command="{Binding RemoveCommand}"></Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

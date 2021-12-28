@@ -90,6 +90,10 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
                 return;
             }
             PlugIn plugIn = PlugInLoader.Load(openFileDialog.FileName);
+            if(null == plugIn)
+            {
+                return;
+            }
             TreeViewItemVM treeViewItem = new PlugInTreeViewItem(plugIn);
             PlugInTreeView.Add(treeViewItem);
         }

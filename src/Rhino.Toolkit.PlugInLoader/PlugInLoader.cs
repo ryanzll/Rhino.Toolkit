@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Rhino.Toolkit.PlugInLoader
 {
@@ -26,6 +27,11 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public PlugIn Load(string assemblyPath)
         {
+            if (PlugIns.Where(p => 0 == string.Compare(assemblyPath, p.PlugInAssemblyPath, StringComparison.OrdinalIgnoreCase)).Any())
+            {
+                MessageBox.Show("Selected plugin already existed");
+                return null;
+            }
             if (string.IsNullOrEmpty(assemblyPath) || !File.Exists(assemblyPath))
             {
                 return null;

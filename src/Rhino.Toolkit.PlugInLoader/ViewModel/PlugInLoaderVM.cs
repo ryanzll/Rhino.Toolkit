@@ -64,6 +64,8 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
 
         public PlugInLoaderVM(RhinoDoc doc, RunMode mode)
         {
+            Doc = doc;
+            Mode = mode;
             PlugInLoader = new PlugInLoader();
             PlugInTreeView = new ObservableCollection<TreeViewItemVM>();
             if(null != PlugInLoader.PlugIns)
@@ -75,7 +77,7 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
                 }
             }
             LoadCommand = new RelayCommand(() => { return true; }, LoadPlugIn);
-            RunCommand = new RelayCommand(() => { return true; }, RunPlugIn);
+            RunCommand = new RelayCommand<Window>((window) => { return true; }, (window) => RunPlugIn(window));
             RemoveCommand = new RelayCommand(() => { return true; }, RemovePlugIn);
             SelectedItemChangedCommand = new RelayCommand<object>((obj) => { return true; }, SelectedItemChanged);
         }
@@ -98,13 +100,14 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
             PlugInTreeView.Add(treeViewItem);
         }
 
-        protected void RunPlugIn()
+        protected void RunPlugIn(Window window)
         {
             if (SelectedPlugInTreeViewItem is PlugInTreeViewItem)
             {
                 return;
             }
 
+            window.Hide();
             PlugInCommandTreeViewItem plugInCommandTreeViewItem = SelectedPlugInTreeViewItem as PlugInCommandTreeViewItem;
             try
             {
@@ -113,7 +116,10 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
             catch(Exception ex)
             {
                 MessageBox.Show(ex.Message);
+                window.Show();
+                return;
             }
+            window.Close();
         }
 
         protected void RemovePlugIn()

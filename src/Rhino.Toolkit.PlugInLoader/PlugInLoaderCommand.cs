@@ -6,6 +6,7 @@ using Rhino.Input.Custom;
 using Rhino.Toolkit.PlugInLoader.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Windows.Interop;
 
 namespace Rhino.Toolkit.PlugInLoader
 {
@@ -28,6 +29,9 @@ namespace Rhino.Toolkit.PlugInLoader
         {
             PlugInLoaderVM plugInLoaderVM = new PlugInLoaderVM(doc,mode);
             MainWindow mainWindow = new MainWindow();
+            var interop = new WindowInteropHelper(mainWindow);
+            interop.EnsureHandle();
+            interop.Owner = RhinoApp.MainWindowHandle();
             mainWindow.DataContext = plugInLoaderVM;
             var result = mainWindow.ShowDialog();
             if (!result.HasValue || !result.Value)

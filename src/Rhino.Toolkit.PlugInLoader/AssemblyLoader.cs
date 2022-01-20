@@ -133,6 +133,7 @@ namespace Rhino.Toolkit.PlugInLoader
             {
                 throw new FileNotFoundException(originalFilePath);
             }
+
             StringBuilder stringBuilder = new StringBuilder(Path.GetFileNameWithoutExtension(originalFilePath));
             if (!parsingOnly)
             {

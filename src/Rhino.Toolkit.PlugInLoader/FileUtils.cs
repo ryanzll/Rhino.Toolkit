@@ -9,8 +9,6 @@ namespace Rhino.Toolkit.PlugInLoader
 {
     public static class FileUtils
     {
-        private const string TempFolderName = "RevitAddins";
-
         public static void CopyDirectory(string sourceDir, string destDir, List<FileInfo> allCopiedFiles)
         {
             try
@@ -143,8 +141,7 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public static string CreateTempFolder(string prefix)
         {
-            string tempPath = Path.GetTempPath();
-            DirectoryInfo plugInRootDirectoryInfo = new DirectoryInfo(Path.Combine(tempPath, "RhinoPlugIns"));
+            DirectoryInfo plugInRootDirectoryInfo = new DirectoryInfo(GetTempPluginFolder());
             if (!plugInRootDirectoryInfo.Exists)
             {
                 plugInRootDirectoryInfo.Create();
@@ -224,6 +221,11 @@ namespace Rhino.Toolkit.PlugInLoader
             {
                 File.SetAttributes(fileName, File.GetAttributes(fileName) & (FileAttributes.Hidden | FileAttributes.System | FileAttributes.Directory | FileAttributes.Archive | FileAttributes.Device | FileAttributes.Normal | FileAttributes.Temporary | FileAttributes.SparseFile | FileAttributes.ReparsePoint | FileAttributes.Compressed | FileAttributes.Offline | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.IntegrityStream | FileAttributes.NoScrubData));
             }
+        }
+
+        private static string GetTempPluginFolder()
+        {
+            return Path.Combine(Path.GetTempPath(), "RhinoPlugIns");
         }
     }
 }

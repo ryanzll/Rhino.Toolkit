@@ -5,6 +5,7 @@ using Rhino.FileIO;
 using Rhino.Geometry;
 using Rhino.Input;
 using Rhino.Input.Custom;
+using Rhino.UI;
 using System;
 using System.Collections.Generic;
 
@@ -27,7 +28,13 @@ namespace Rhino.Toolkit.ModelImporter
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            File3dm file3dm = File3dm.Read(@"C:\Users\ryan\Desktop\wall+box.3dm");
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if(!openFileDialog.ShowOpenDialog())
+            {
+                return Result.Cancel;
+            }
+
+            File3dm file3dm = File3dm.Read(openFileDialog.FileName);
             GeometryUtil geometryUtil = new GeometryUtil();
             BoundingBox boundingBox;
             IList<GeometryBase> geometries = new List<GeometryBase>();

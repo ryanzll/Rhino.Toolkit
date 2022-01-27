@@ -44,6 +44,9 @@ namespace Rhino.Toolkit.ModelImporter
             {
                 bool result = geometry.Transform(transform);
             }
+
+            BoundingBox = transform.TransformBoundingBox(BoundingBox);
+            //bool result1 = BoundingBox.Transform(transform);
             base.OnMouseMove(e);
         }
 
@@ -67,9 +70,7 @@ namespace Rhino.Toolkit.ModelImporter
                         break;
                 }
             }
-            double delX = BoundingBox.Max.X - BoundingBox.Min.X;
-            BoundingBox boundingBox = new BoundingBox(PrePoint, new Point3d(PrePoint.X + delX, PrePoint.Y + delX, PrePoint.Z + delX));
-            e.Display.DrawBox(boundingBox, System.Drawing.Color.OrangeRed);
+            e.Display.DrawBox(BoundingBox, System.Drawing.Color.OrangeRed);
             base.OnDynamicDraw(e);
         }
     }

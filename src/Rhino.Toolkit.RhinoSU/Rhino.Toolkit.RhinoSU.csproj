@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="GetRectangle.cs" />
     <Compile Include="GetPointAndFace.cs" />
+    <Compile Include="PickGeometryWalker.cs" />
     <Compile Include="RSURectangleCommand.cs" />
     <Compile Include="RSUPushPullCommand.cs" />
     <Compile Include="RhinoSUPlugin.cs" />
@@ -52,6 +53,12 @@
     <PackageReference Include="RhinoCommon">
       <Version>7.13.21348.13001</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rhino.Toolkit.Common\Rhino.Toolkit.Common.csproj">
+      <Project>{c3d9402f-217b-42d0-b4c6-68bb5f3c5c93}</Project>
+      <Name>Rhino.Toolkit.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

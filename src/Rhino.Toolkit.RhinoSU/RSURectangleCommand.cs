@@ -25,25 +25,20 @@ namespace Rhino.Toolkit.RhinoSU
             GetPointAndFace getPointAndFace = new GetPointAndFace();
             getPointAndFace.SetCommandPrompt("Select rectangle's first point");
             GetResult result = getPointAndFace.Get();
-            
-            if(null == getPointAndFace.Face)
+            Plane plane = getPointAndFace.GetPlane();
+            if (null == plane)
             {
                 return Result.Failure;
             }
-
-            Plane plane; 
-            if(!getPointAndFace.Face.TryGetPlane(out plane))
-            {
-                double u;
-                double v;
-                getPointAndFace.Face.ClosestPoint(getPointAndFace.HitPoint, out u, out v);
-                plane = new Plane(getPointAndFace.Face.PointAt(u, v), getPointAndFace.Face.NormalAt(u, v));
-            }
             getPointAndFace.View().ActiveViewport.SetConstructionPlane(plane);
 
-            GetRectangle getRectangle = new GetRectangle(plane, getPointAndFace.HitPoint);
+            GetRectangle getRectangle = new GetRectangle(plane, getPointAndFace.HitPoint.Value);
             getRectangle.SetCommandPrompt("Select second point");
             result = getRectangle.Get();
+            Point3d secondPoint = getRectangle.Point();
+
+            Rectangle3d rectangle = new Rectangle3d(plane, getPointAndFace.HitPoint.Value, secondPoint);
+            doc.Objects.AddRectangle(rectangle);
 
             return Result.Success;
         }

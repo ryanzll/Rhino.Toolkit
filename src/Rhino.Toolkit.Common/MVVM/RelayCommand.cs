@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace Rhino.Toolkit.Common
+namespace Rhino.Toolkit.Common.MVVM
 {
     public class RelayCommand<T> : ICommand where T : class
     {

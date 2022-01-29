@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using Rhino.Commands;
-using Rhino.Toolkit.Common;
+using Rhino.Toolkit.Common.MVVM;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

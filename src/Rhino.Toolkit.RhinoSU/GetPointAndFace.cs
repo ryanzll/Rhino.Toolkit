@@ -1,11 +1,9 @@
 ﻿using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Input.Custom;
-using System;
+using Rhino.Toolkit.Common.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rhino.Toolkit.RhinoSU
 {
@@ -13,12 +11,46 @@ namespace Rhino.Toolkit.RhinoSU
     {
         public BrepFace Face { get; set; }
 
-        public Point3d HitPoint { get; set; }
+        public Line? Line { get; set; }
+
+        public Point3d? HitPoint { get; set; }
+
+        public Mesh SelectedMesh { get; set; }
+
+        public Vector3f? MeshFaceNormal { get; set; }
+
+        GeometryParser GeometryParser { get; set; }
+
+        PickGeometryWalker PickGeometryWalker { get; set; }
 
         public GetPointAndFace():base()
         {
             this.ClearSnapPoints();
             this.EnableObjectSnapCursors(false);
+
+            PickGeometryWalker = new PickGeometryWalker();
+            GeometryParser = new GeometryParser(PickGeometryWalker);
+        }
+
+        public Plane GetPlane()
+        {
+            Plane plane = Plane.Unset;
+            if(null != Face)
+            {
+                if (!Face.TryGetPlane(out plane))
+                {
+                    double u;
+                    double v;
+                    Face.ClosestPoint(HitPoint.Value, out u, out v);
+                    plane = new Plane(Face.PointAt(u, v), Face.NormalAt(u, v));
+                }
+            }
+            else if(null != SelectedMesh)
+            {
+                plane = new Plane(SelectedMesh.Vertices[0], new Vector3d(MeshFaceNormal.Value));
+            }
+
+            return plane;
         }
 
         protected override void OnMouseDown(GetPointMouseEventArgs e)
@@ -54,93 +86,35 @@ namespace Rhino.Toolkit.RhinoSU
                 return;
             }
 
-            double maxDepth = double.NegativeInfinity;
-            BrepFace selectedFace = null;
-            double t;
-            double depth;
-            double distance;
-            Point3d hitPoint = Point3d.Unset;
-            PickContext.MeshHitFlag hitFlag;
-            int hitIndex;
-            foreach (var objRef in objRefs)
-            {
-                var rhinoObject = objRef.Object();
-                if (rhinoObject is ExtrusionObject)
-                {
-                    ExtrusionObject extrusionObject = rhinoObject as ExtrusionObject;
-                    Extrusion extrusion = extrusionObject.Geometry as Extrusion;
-                    Brep brep = extrusion.ToBrep();
-                    NurbsSurface nurbsSurface = extrusion.ToNurbsSurface();
+            IList<RhinoObject> rhinoObjects = objRefs.Select(or => or.Object()).ToList();
+            PickGeometryWalker.Reset(pick_context);
+            GeometryParser.Parse(rhinoObjects);
+            Face = PickGeometryWalker.SelectedBrepFace;
+            Line = PickGeometryWalker.SelectedLine;
+            HitPoint = PickGeometryWalker.SelectedPoint;
 
-                    foreach (BrepFace face in brep.Faces)
-                    {
-                        Mesh mesh = face.GetMesh(MeshType.Default);
-                        if (null == mesh)
-                        {
-                            continue;
-                        }
-                        if (pick_context.PickFrustumTest(mesh,
-                            PickContext.MeshPickStyle.ShadedModePicking,
-                            out hitPoint,
-                            out depth,
-                            out distance,
-                            out hitFlag,
-                            out hitIndex))
-                        {
-
-                        }
-                    }
-                }
-
-                if (rhinoObject is BrepObject)
-                {
-                    BrepObject brepObject = rhinoObject as BrepObject;
-                    Brep brep = brepObject.Geometry as Brep;
-                    foreach (Surface surface in brep.Surfaces)
-                    {
-                        NurbsSurface nurbsSurface = surface as NurbsSurface;
-                    }
-                    foreach (BrepFace face in brep.Faces)
-                    {
-                        Mesh mesh = face.GetMesh(MeshType.Default);
-                        if (null == mesh)
-                        {
-                            continue;
-                        }
-                        if (pick_context.PickFrustumTest(mesh,
-                            PickContext.MeshPickStyle.ShadedModePicking,
-                            out hitPoint,
-                            out depth,
-                            out distance,
-                            out hitFlag,
-                            out hitIndex))
-                        {
-                            if (maxDepth < depth)
-                            {
-                                maxDepth = depth;
-                                selectedFace = face;
-                                HitPoint = hitPoint;
-                            }
-
-                            if(selectedFace == face)
-                            {
-                                HitPoint = hitPoint;
-                            }
-                        }
-                    }
-                }
-            }
-
-            Face = selectedFace;
-            //if (null != selectedFace && hitPoint != Point3d.Unset)
-            //{
-               
-            //}
+            SelectedMesh = PickGeometryWalker.SelectedMesh;
+            MeshFaceNormal = PickGeometryWalker.MeshFaceNormal;
         }
 
         protected override void OnDynamicDraw(GetPointDrawEventArgs e)
         {
-            if(null == Face)
+            if(HitPoint.HasValue)
+            {
+                e.Display.DrawPoint(HitPoint.Value);
+            }
+
+            if (Line.HasValue)
+            {
+                e.Display.DrawLine(Line.Value, System.Drawing.Color.Red);
+            }
+
+            if(null != SelectedMesh)
+            {
+                e.Display.DrawMeshWires(SelectedMesh, System.Drawing.Color.Red);
+            }
+
+            if (null == Face)
             {
                 return;
             }
@@ -158,8 +132,6 @@ namespace Rhino.Toolkit.RhinoSU
                     }
                 }
             }
-
-            e.Display.DrawPoint(HitPoint);
         }
     }
 }

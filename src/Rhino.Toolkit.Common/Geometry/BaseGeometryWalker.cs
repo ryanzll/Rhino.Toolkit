@@ -5,6 +5,11 @@ namespace Rhino.Toolkit.Common.Geometry
 {
     public class BaseGeometryWalker : IGeometryWalker
     {
+        public virtual void Reset()
+        {
+
+        }
+
         public virtual void EnterObject(RhinoObject rhinoObject)
         {
         }

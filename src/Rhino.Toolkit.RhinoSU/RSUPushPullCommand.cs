@@ -1,5 +1,7 @@
 ﻿using Rhino;
 using Rhino.Commands;
+using Rhino.Geometry;
+using Rhino.Input;
 using Rhino.Input.Custom;
 
 namespace Rhino.Toolkit.RhinoSU
@@ -21,15 +23,21 @@ namespace Rhino.Toolkit.RhinoSU
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            GetObject go = new GetObject();
-            go.EnablePreSelect(true, false);
-            go.GeometryFilter = DocObjects.ObjectType.Surface | DocObjects.ObjectType.MeshFace;
-            go.SetCommandPrompt("Select first cornor of rectangle");
-            var gr = go.GetMultiple(0, 1);
-            if(gr == Input.GetResult.Nothing)
+            GetClosedCurveAndFace getClosedCurveAndFace = new GetClosedCurveAndFace();
+            getClosedCurveAndFace.SetCommandPrompt("Select rectangle's first point");
+            GetResult result = getClosedCurveAndFace.Get();
+
+            //BrepFace brepFace = getClosedCurveAndFace.Face;
+            //if(null == brepFace || null == brepFace.Id)
+            //{
+            //    return Result.Failure;
+            //}
+            if(getClosedCurveAndFace.SelectedObjectId.HasValue)
             {
-                return Result.Nothing;
+                doc.Objects.Select(getClosedCurveAndFace.SelectedObjectId.Value);
             }
+            RhinoApp.RunScript("_ExtrudeSrf", false);
+            
             return Result.Success;
         }
     }

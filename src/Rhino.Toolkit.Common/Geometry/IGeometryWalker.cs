@@ -10,6 +10,8 @@ namespace Rhino.Toolkit.Common.Geometry
 {
     public interface IGeometryWalker
     {
+        void Reset();
+
         void EnterObject(RhinoObject rhinoObject);
         void LeaveObject(RhinoObject rhinoObject);
 

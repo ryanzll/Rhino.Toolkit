@@ -41,9 +41,12 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GetClosedCurveAndFace.cs" />
+    <Compile Include="GetPushPull.cs" />
     <Compile Include="GetRectangle.cs" />
-    <Compile Include="GetPointAndFace.cs" />
-    <Compile Include="PickGeometryWalker.cs" />
+    <Compile Include="GetPointAndPlane.cs" />
+    <Compile Include="PickClosedCurveAndFace.cs" />
+    <Compile Include="PickPointAndPlane.cs" />
     <Compile Include="RSURectangleCommand.cs" />
     <Compile Include="RSUPushPullCommand.cs" />
     <Compile Include="RhinoSUPlugin.cs" />
@@ -59,6 +62,9 @@
       <Project>{c3d9402f-217b-42d0-b4c6-68bb5f3c5c93}</Project>
       <Name>Rhino.Toolkit.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RhinoSU.rui" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

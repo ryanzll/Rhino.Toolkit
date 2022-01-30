@@ -19,7 +19,11 @@ namespace Rhino.Toolkit.Common.Geometry
 
         public void Parse(IList<RhinoObject> rhinoObjects)
         {
-            foreach(RhinoObject rhinoObject in rhinoObjects)
+            if (null != GeometryWalker)
+            {
+                GeometryWalker.Reset();
+            }
+            foreach (RhinoObject rhinoObject in rhinoObjects)
             {
                 if(null != GeometryWalker)
                 {

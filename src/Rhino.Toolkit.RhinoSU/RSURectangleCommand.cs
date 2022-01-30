@@ -22,7 +22,7 @@ namespace Rhino.Toolkit.RhinoSU
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            GetPointAndFace getPointAndFace = new GetPointAndFace();
+            GetPointAndPlane getPointAndFace = new GetPointAndPlane();
             getPointAndFace.SetCommandPrompt("Select rectangle's first point");
             GetResult result = getPointAndFace.Get();
             Plane plane = getPointAndFace.GetPlane();

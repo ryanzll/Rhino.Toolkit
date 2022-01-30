@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Rhino.Toolkit.RhinoSU
 {
-    public class GetPointAndFace:GetPoint
+    public class GetPointAndPlane:GetPoint
     {
         public BrepFace Face { get; set; }
 
@@ -19,17 +19,14 @@ namespace Rhino.Toolkit.RhinoSU
 
         public Vector3f? MeshFaceNormal { get; set; }
 
-        GeometryParser GeometryParser { get; set; }
+        PickPointAndPlane PickGeometryWalker { get; set; }
 
-        PickGeometryWalker PickGeometryWalker { get; set; }
-
-        public GetPointAndFace():base()
+        public GetPointAndPlane():base()
         {
             this.ClearSnapPoints();
             this.EnableObjectSnapCursors(false);
 
-            PickGeometryWalker = new PickGeometryWalker();
-            GeometryParser = new GeometryParser(PickGeometryWalker);
+            PickGeometryWalker = new PickPointAndPlane();
         }
 
         public Plane GetPlane()
@@ -87,8 +84,7 @@ namespace Rhino.Toolkit.RhinoSU
             }
 
             IList<RhinoObject> rhinoObjects = objRefs.Select(or => or.Object()).ToList();
-            PickGeometryWalker.Reset(pick_context);
-            GeometryParser.Parse(rhinoObjects);
+            PickGeometryWalker.Update(pick_context, rhinoObjects);
             Face = PickGeometryWalker.SelectedBrepFace;
             Line = PickGeometryWalker.SelectedLine;
             HitPoint = PickGeometryWalker.SelectedPoint;

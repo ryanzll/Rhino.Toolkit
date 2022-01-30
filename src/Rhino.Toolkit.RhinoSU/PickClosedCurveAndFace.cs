@@ -1,18 +1,19 @@
-﻿using Rhino.Geometry;
-using Rhino.Geometry.Collections;
+﻿using Rhino.DocObjects;
+using Rhino.Geometry;
 using Rhino.Input.Custom;
 using Rhino.Toolkit.Common.Geometry;
+using System;
 using System.Collections.Generic;
 
 namespace Rhino.Toolkit.RhinoSU
 {
-    public class PickGeometryWalker : BaseGeometryWalker
+    public class PickClosedCurveAndFace : BaseGeometryWalker
     {
+        GeometryParser GeometryParser { get; set; }
+
         PickContext PickContext { get; set; }
 
         public Point3d? SelectedPoint { get; set; }
-
-        public Line? SelectedLine { get; set; }
 
         public BrepFace SelectedBrepFace { get; set; }
 
@@ -22,20 +23,34 @@ namespace Rhino.Toolkit.RhinoSU
 
         double MaxDepth { get; set; }
 
-        public PickGeometryWalker()
+        public Guid? SelectedObjectId { get; set; }
+
+        Guid? CurObjectId { get; set; }
+
+        public PickClosedCurveAndFace()
         {
-            Reset(null);
+            GeometryParser = new GeometryParser(this);
         }
 
-        public void Reset(PickContext pickContext)
+        public void Update(PickContext pickContext, IList<RhinoObject> rhinoObjects)
         {
             PickContext = pickContext;
+            GeometryParser.Parse(rhinoObjects);
+        }
+
+        public override void Reset()
+        {
             MaxDepth = double.NegativeInfinity;
             SelectedPoint = null;
-            SelectedLine = null;
             SelectedBrepFace = null;
             SelectedMesh = null;
             MeshFaceNormal = null;
+            CurObjectId = null;
+        }
+
+        public override void EnterObject(RhinoObject rhinoObject)
+        {
+            CurObjectId = rhinoObject.Id;
         }
 
         public override void EnterExtrusion(Extrusion extrusion)
@@ -103,7 +118,7 @@ namespace Rhino.Toolkit.RhinoSU
             PickContext.MeshHitFlag hitFlag;
             int hitIndex;
 
-            Mesh mesh = brepFace.GetMesh(MeshType.Default);
+            Mesh mesh = brepFace.GetMesh(MeshType.Any);
             if (null == mesh)
             {
                 return;
@@ -121,21 +136,25 @@ namespace Rhino.Toolkit.RhinoSU
                     MaxDepth = depth;
                     SelectedBrepFace = brepFace;
                     SelectedPoint = hitPoint;
+                    SelectedObjectId = CurObjectId;
+                    SelectedMesh = mesh;
                 }
 
-                if (SelectedBrepFace == brepFace)
+                if (null == SelectedObjectId ||
+                    SelectedBrepFace == brepFace ||
+                    SelectedBrepFace.Id == brepFace.Id)
                 {
                     SelectedPoint = hitPoint;
                 }
             }
         }
 
-        public override void EnterNurbsSurface(NurbsSurface nurbsSurface)
+        public override void EnterPolylineCurve(PolylineCurve polylineCurve)
         {
-        }
-
-        public override void EnterLine(Line line)
-        {
+            if(!polylineCurve.IsClosed || !polylineCurve.IsPlanar())
+            {
+                return;
+            }
             double t;
             double depth;
             double distance;
@@ -143,23 +162,31 @@ namespace Rhino.Toolkit.RhinoSU
             PickContext.MeshHitFlag hitFlag;
             int hitIndex;
 
-            if (PickContext.PickFrustumTest(line,
-                            out t,
-                            out depth,
-                            out distance))
+            if (polylineCurve.IsPolyline())
             {
-                if (MaxDepth < depth)
+                Polyline polyline = polylineCurve.ToPolyline();
+                for (int lineIndex = 0; lineIndex < polyline.Count; lineIndex++)
                 {
-                    MaxDepth = depth;
-                    SelectedLine = line;
-                    SelectedPoint = hitPoint;
-                }
+                    Line line = polyline.SegmentAt(lineIndex);
+                    if (PickContext.PickFrustumTest(line,
+                                                out t,
+                                                out depth,
+                                                out distance))
+                    {
+                        if (MaxDepth < depth)
+                        {
+                            MaxDepth = depth;
+                            SelectedPoint = hitPoint;
+                        }
 
-                if(SelectedLine == line)
-                {
-                    SelectedPoint = hitPoint;
+                        //if (SelectedLine == line)
+                        //{
+                        //    SelectedPoint = hitPoint;
+                        //}
+                    }
                 }
             }
+            
         }
     }
 }

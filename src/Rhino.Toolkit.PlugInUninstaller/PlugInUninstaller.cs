@@ -46,12 +46,15 @@ namespace Rhino.Toolkit.PlugInUninstaller
         {
             ObservableCollection<PlugInInfoVM> plugInInfoVMs = new ObservableCollection<PlugInInfoVM>();
             Dictionary<Guid, string>  installedPlugIns = PlugIn.GetInstalledPlugIns();
+            List<PlugInInfoVM> plugInInfoVMList = new List<PlugInInfoVM>();
             foreach(var plugInGuidName in installedPlugIns)
             {
                 PlugInInfo plugInInfo = PlugIn.GetPlugInInfo(plugInGuidName.Key);
                 PlugInInfoVM plugInInfoVM = new PlugInInfoVM(plugInInfo);
-                plugInInfoVMs.Add(plugInInfoVM);
+                plugInInfoVMList.Add(plugInInfoVM);
             }
+            plugInInfoVMList = plugInInfoVMList.OrderBy(p => p.Name).ToList();
+            plugInInfoVMList.ForEach(p => plugInInfoVMs.Add(p));
             return plugInInfoVMs;
         }
     }

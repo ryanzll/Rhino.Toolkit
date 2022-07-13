@@ -55,26 +55,27 @@ namespace Rhino.Toolkit.PlugInLoader
             Assembly assembly;
             lock (this)
             {
-                AssemblyName assemblyName = new AssemblyName(args.Name);
-                string foundFilePath = SearchAssemblyFileInTempFolder(args.Name);
+                string[] strArrays = args.Name.Split(new char[] { ',' });
+
+                string assemblyName = strArrays[0];
+                string language = strArrays[2];
+
+                string foundFilePath = SearchAssemblyFileInTempFolder(assemblyName);
                 if (!File.Exists(foundFilePath))
                 {
-                    foundFilePath = SearchAssemblyFileInOriginalFolders(args.Name);
+                    foundFilePath = SearchAssemblyFileInOriginalFolders(assemblyName);
                     if (string.IsNullOrEmpty(foundFilePath))
                     {
-                        string[] strArrays = args.Name.Split(new char[] { ',' });
-                        string str = strArrays[0];
-                        if ((int)strArrays.Length > 1)
+                        if (strArrays.Length > 1)
                         {
-                            string str1 = strArrays[2];
-                            if (str.EndsWith(".resources", StringComparison.CurrentCultureIgnoreCase) && !str1.EndsWith("neutral", StringComparison.CurrentCultureIgnoreCase))
+                            if (assemblyName.EndsWith(".resources", StringComparison.CurrentCultureIgnoreCase) && !language.EndsWith("neutral", StringComparison.CurrentCultureIgnoreCase))
                             {
-                                str = str.Substring(0, str.Length - ".resources".Length);
+                                assemblyName = assemblyName.Substring(0, assemblyName.Length - ".resources".Length);
                             }
-                            foundFilePath = SearchAssemblyFileInTempFolder(str);
+                            foundFilePath = SearchAssemblyFileInTempFolder(assemblyName);
                             if (!File.Exists(foundFilePath))
                             {
-                                foundFilePath = SearchAssemblyFileInOriginalFolders(str);
+                                foundFilePath = SearchAssemblyFileInOriginalFolders(assemblyName);
                             }
                             else
                             {
@@ -105,7 +106,7 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public void HookAssemblyResolve()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(this.CurrentDomain_AssemblyResolve);
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
         }
 
         private Assembly LoadAddin(string filePath)
@@ -154,58 +155,30 @@ namespace Rhino.Toolkit.PlugInLoader
 
         private string SearchAssemblyFileInOriginalFolders(string assemblyName)
         {
-            string str;
-            string[] strArrays = new string[] { ".dll", ".exe" };
-            string filePath = string.Empty;
-            string str1 = assemblyName.Substring(0, assemblyName.IndexOf(','));
-            int num = 0;
-            while (true)
+            string[] fileExts = new string[] { ".dll", ".rhp", ".exe" };
+            for (int num = 0; num < fileExts.Length; num++)
             {
-                if (num < (int)strArrays.Length)
+                string fileExt = fileExts[num];
+                string filePath = string.Concat(DotNetDir, "\\", assemblyName, fileExt);
+                if (!File.Exists(filePath))
                 {
-                    string str2 = strArrays[num];
-                    filePath = string.Concat(DotNetDir, "\\", str1, str2);
-                    if (!File.Exists(filePath))
-                    {
-                        num++;
-                    }
-                    else
-                    {
-                        str = filePath;
-                        break;
-                    }
+                    continue;
                 }
                 else
                 {
-                    for (int i = 0; i < (int)strArrays.Length; i++)
-                    {
-                        string str3 = strArrays[i];
-                        foreach (string originalFolder in this.OriginalFolders)
-                        {
-                            filePath = string.Concat(originalFolder, "\\", str1, str3);
-                            if (!File.Exists(filePath))
-                            {
-                                continue;
-                            }
-                            str = filePath;
-                            return str;
-                        }
-                    }                                     
-                    return SearchAssemblyFileInOriginalFolders(assemblyName);
+                    return filePath;
                 }
             }
-            return str;
+            return string.Empty;
         }
 
         private string SearchAssemblyFileInTempFolder(string assemblyName)
         {
-            string[] strArrays = new string[] { ".dll", ".exe" };
-            string filePath = string.Empty;
-            string str = assemblyName.Substring(0, assemblyName.IndexOf(','));
-            for (int i = 0; i < (int)strArrays.Length; i++)
+            string[] fileExts = new string[] { ".dll", ".rhp", ".exe" };
+            for (int i = 0; i < fileExts.Length; i++)
             {
-                string str1 = strArrays[i];
-                filePath = string.Concat(TempFolder, "\\", str, str1);
+                string fileExt = fileExts[i];
+                string filePath = string.Concat(TempFolder, "\\", assemblyName, fileExt);
                 if (File.Exists(filePath))
                 {
                     return filePath;
@@ -216,7 +189,7 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public void UnhookAssemblyResolve()
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(this.CurrentDomain_AssemblyResolve);
+            AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(CurrentDomain_AssemblyResolve);
         }
     }
 }

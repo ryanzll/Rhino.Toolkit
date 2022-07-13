@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rhino.Toolkit.PlugInLoader
 {
@@ -14,7 +11,7 @@ namespace Rhino.Toolkit.PlugInLoader
             try
             {
                 string[] directories = Directory.GetDirectories(sourceDir, "*.*", SearchOption.AllDirectories);
-                for (int i = 0; i < (int)directories.Length; i++)
+                for (int i = 0; i < directories.Length; i++)
                 {
                     string sourceSubDirectionName = directories[i].Replace(sourceDir, "");
                     string destSubDirectionPath = string.Concat(destDir, sourceSubDirectionName);
@@ -24,7 +21,7 @@ namespace Rhino.Toolkit.PlugInLoader
                     }
                 }
                 string[] files = Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories);
-                for (int j = 0; j < (int)files.Length; j++)
+                for (int j = 0; j < files.Length; j++)
                 {
                     string sourceSubFileName = files[j].Replace(sourceDir, "");
                     string destSubFilePath = string.Concat(destDir, sourceSubFileName);
@@ -87,17 +84,17 @@ namespace Rhino.Toolkit.PlugInLoader
             }
             if (!onlyCopyRelated)
             {                
-                FileUtils.CopyDirectory(directoryName, destFolder, allCopiedFiles);
+                CopyDirectory(directoryName, destFolder, allCopiedFiles);
             }
             else
             {
                 string fileSearchPattern = string.Concat(Path.GetFileNameWithoutExtension(sourceFilePath), ".*");
                 string[] files = Directory.GetFiles(directoryName, fileSearchPattern, SearchOption.TopDirectoryOnly);
-                for (int i = 0; i < (int)files.Length; i++)
+                for (int i = 0; i < files.Length; i++)
                 {
                     string foundFileName = files[i];
                     string targetFileName = Path.Combine(destFolder, Path.GetFileName(foundFileName));
-                    if (FileUtils.CopyFile(foundFileName, targetFileName))
+                    if (CopyFile(foundFileName, targetFileName))
                     {
                         allCopiedFiles.Add(new FileInfo(targetFileName));
                     }
@@ -147,14 +144,14 @@ namespace Rhino.Toolkit.PlugInLoader
                 plugInRootDirectoryInfo.Create();
             }
             DirectoryInfo[] subDirectories = plugInRootDirectoryInfo.GetDirectories();
-            for (int i = 0; i < (int)subDirectories.Length; i++)
+            for (int i = 0; i < subDirectories.Length; i++)
             {
                 DirectoryInfo subDirectoryInfo = subDirectories[i];
                 try
                 {
                     Directory.Delete(subDirectoryInfo.FullName, true);
                 }
-                catch (Exception exception)
+                catch (Exception)
                 {
                 }
             }
@@ -188,21 +185,21 @@ namespace Rhino.Toolkit.PlugInLoader
         public static long GetFolderSize(string folderPath)
         {
             DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
-            long folderSize = (long)0;
+            long folderSize = 0;
             FileSystemInfo[] fileSystemInfos = directoryInfo.GetFileSystemInfos();
-            for (int i = 0; i < (int)fileSystemInfos.Length; i++)
+            for (int i = 0; i < fileSystemInfos.Length; i++)
             {
                 FileSystemInfo fileSystemInfo = fileSystemInfos[i];
                 if (!(fileSystemInfo is FileInfo))
                 {
-                    folderSize += FileUtils.GetFolderSize(fileSystemInfo.FullName);
+                    folderSize += GetFolderSize(fileSystemInfo.FullName);
                 }
                 else
                 {
                     folderSize += ((FileInfo)fileSystemInfo).Length;
                 }
             }
-            return folderSize / (long)1024 / (long)1024;
+            return folderSize /1024 / 1024;
         }
 
         public static DateTime GetModifyTime(string filePath)

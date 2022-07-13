@@ -80,20 +80,29 @@ namespace Rhino.Toolkit.PlugInLoader
                 throw new ArgumentNullException("plugInCommand");
             }
             AssemblyLoader assemblyLoader = new AssemblyLoader();
-            Assembly assembly = assemblyLoader.LoadAddinsFromTempFolder(plugInCommand.PlugInAssemblyPath, false);
-            Command command = assembly.CreateInstance(plugInCommand.FullName) as Command;
-            if (null == command)
+            assemblyLoader.HookAssemblyResolve();
+
+            try
             {
-                throw new ArgumentException(plugInCommand.FullName);
+                Assembly assembly = assemblyLoader.LoadAddinsFromTempFolder(plugInCommand.PlugInAssemblyPath, false);
+                Command command = assembly.CreateInstance(plugInCommand.FullName) as Command;
+                if (null == command)
+                {
+                    throw new ArgumentException(plugInCommand.FullName);
+                }
+                Type type = command.GetType();
+                MethodInfo runCommandInfo = type.GetMethod("RunCommand", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                object result = runCommandInfo.Invoke(command, new object[] { doc, mode });
+                if (null == result)
+                {
+                    return Result.Failure;
+                }
+                return (Result)result;
             }
-            Type type = command.GetType();
-            MethodInfo runCommandInfo = type.GetMethod("RunCommand", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-            object result = runCommandInfo.Invoke(command, new object[] { doc, mode });
-            if (null == result)
+            finally
             {
-                return Result.Failure;
-            }
-            return (Result)result;
+                assemblyLoader.UnhookAssemblyResolve();
+            }            
         }
     }
 }

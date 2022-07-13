@@ -22,7 +22,7 @@ namespace Rhino.Toolkit.PlugInUninstaller
         public static PlugInUninstallerCommand Instance { get; private set; }
 
         ///<returns>The command name as it appears on the Rhino command line.</returns>
-        public override string EnglishName => "PlugInUninstallerCommand";
+        public override string EnglishName => "PlugInUninstaller";
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {

@@ -70,7 +70,7 @@ namespace Rhino.Toolkit.PlugInLoader
                         {
                             if (assemblyName.EndsWith(".resources", StringComparison.CurrentCultureIgnoreCase) && !language.EndsWith("neutral", StringComparison.CurrentCultureIgnoreCase))
                             {
-                                assemblyName = assemblyName.Substring(0, assemblyName.Length - ".resources".Length);
+                                //assemblyName = assemblyName.Substring(0, assemblyName.Length - ".resources".Length);
                             }
                             foundFilePath = SearchAssemblyFileInTempFolder(assemblyName);
                             if (!File.Exists(foundFilePath))

@@ -1,13 +1,10 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Rhino.Toolkit.PlugInLoader
 {
@@ -19,15 +16,80 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public string TempFolder{get;set;}
 
+        public bool LoadAssemblyManually { get; set; }
+
+        static List<string> DefaultLanguageFolderNames { get; set; } = new List<string>();
+
         static AssemblyLoader()
         {
             DotNetDir = string.Concat(Environment.GetEnvironmentVariable("windir"), "\\Microsoft.NET\\Framework\\v2.0.50727");
+            DefaultLanguageFolderNames.AddRange(new string[] { "cn", "es", "en" });
         }
 
         public AssemblyLoader()
         {
             TempFolder = string.Empty;
             OriginalFolders = new List<string>();
+        }
+
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            Assembly assembly;
+            lock (this)
+            {
+                string[] strArrays = args.Name.Split(new char[] { ',' });
+
+                string assemblyName = strArrays[0];
+                string language = strArrays[2];
+                //can't parse correctly, just return null
+                if (strArrays.Length <= 1)
+                {
+                    return null;
+                }
+
+                string foundFilePath = SearchAssemblyInFolder(TempFolder, assemblyName);
+                if (!File.Exists(foundFilePath))
+                {
+                    foundFilePath = SearchAssemblyInFolder(DotNetDir, assemblyName);
+                    if (string.IsNullOrEmpty(foundFilePath))
+                    {
+                        foundFilePath = SearchAssemblyInFolder(TempFolder, assemblyName);
+                        if (!File.Exists(foundFilePath))
+                        {
+                            foundFilePath = SearchAssemblyInFolder(DotNetDir, assemblyName);
+                        }
+                        else
+                        {
+                            assembly = LoadAddin(foundFilePath);
+                            return assembly;
+                        }
+                    }
+                    if ( string.IsNullOrEmpty(foundFilePath))
+                    {
+                        if(LoadAssemblyManually)
+                        {
+                            OpenFileDialog openFileDialog = new OpenFileDialog();
+                            openFileDialog.Filter = "Assembly files (*.dll;*.exe,*.rhp)|*.dll;*.exe;*.rhp|All files|*.*||";
+                            string str = args.Name.Substring(0, args.Name.IndexOf(','));
+                            openFileDialog.FileName = string.Concat(str, ".*");
+                            if (openFileDialog.ShowDialog() != true)
+                            {
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    assembly = CopyAndLoadAddin(foundFilePath, TempFolder,true);
+                }
+                else
+                {
+                    assembly = LoadAddin(foundFilePath);
+                }
+            }
+            return assembly;
         }
 
         private Assembly CopyAndLoadAddin(string srcFilePath, string destFolderPath, bool onlyCopyRelated)
@@ -48,60 +110,6 @@ namespace Rhino.Toolkit.PlugInLoader
                 }
             }
             return LoadAddin(destFilePath);
-        }
-
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            Assembly assembly;
-            lock (this)
-            {
-                string[] strArrays = args.Name.Split(new char[] { ',' });
-
-                string assemblyName = strArrays[0];
-                string language = strArrays[2];
-
-                string foundFilePath = SearchAssemblyFileInTempFolder(assemblyName);
-                if (!File.Exists(foundFilePath))
-                {
-                    foundFilePath = SearchAssemblyFileInOriginalFolders(assemblyName);
-                    if (string.IsNullOrEmpty(foundFilePath))
-                    {
-                        if (strArrays.Length > 1)
-                        {
-                            if (assemblyName.EndsWith(".resources", StringComparison.CurrentCultureIgnoreCase) && !language.EndsWith("neutral", StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                //assemblyName = assemblyName.Substring(0, assemblyName.Length - ".resources".Length);
-                            }
-                            foundFilePath = SearchAssemblyFileInTempFolder(assemblyName);
-                            if (!File.Exists(foundFilePath))
-                            {
-                                foundFilePath = SearchAssemblyFileInOriginalFolders(assemblyName);
-                            }
-                            else
-                            {
-                                assembly = LoadAddin(foundFilePath);
-                                return assembly;
-                            }
-                        }
-                    }
-                    if (string.IsNullOrEmpty(foundFilePath))
-                    {
-                        OpenFileDialog openFileDialog = new OpenFileDialog();
-                        openFileDialog.Filter = "Assembly files (*.dll;*.exe,*.rhp)|*.dll;*.exe;*.rhp|All files|*.*||";
-                        string str = args.Name.Substring(0, args.Name.IndexOf(','));
-                        openFileDialog.FileName = string.Concat(str, ".*");
-                        if (openFileDialog.ShowDialog() != true)
-                        {
-                        }
-                    }
-                    assembly = CopyAndLoadAddin(foundFilePath, TempFolder,true);
-                }
-                else
-                {
-                    assembly = LoadAddin(foundFilePath);
-                }
-            }
-            return assembly;
         }
 
         public void HookAssemblyResolve()
@@ -153,13 +161,13 @@ namespace Rhino.Toolkit.PlugInLoader
             return null;
         }
 
-        private string SearchAssemblyFileInOriginalFolders(string assemblyName)
+        private string SearchAssemblyInFolder(string folderPath, string assemblyName, bool searchSubFolder = true)
         {
             string[] fileExts = new string[] { ".dll", ".rhp", ".exe" };
             for (int num = 0; num < fileExts.Length; num++)
             {
                 string fileExt = fileExts[num];
-                string filePath = string.Concat(DotNetDir, "\\", assemblyName, fileExt);
+                string filePath = string.Concat(folderPath, "\\", assemblyName, fileExt);
                 if (!File.Exists(filePath))
                 {
                     continue;
@@ -169,17 +177,33 @@ namespace Rhino.Toolkit.PlugInLoader
                     return filePath;
                 }
             }
-            return string.Empty;
-        }
 
-        private string SearchAssemblyFileInTempFolder(string assemblyName)
-        {
-            string[] fileExts = new string[] { ".dll", ".rhp", ".exe" };
-            for (int i = 0; i < fileExts.Length; i++)
+            if (assemblyName.EndsWith(".resources", StringComparison.CurrentCultureIgnoreCase))
             {
-                string fileExt = fileExts[i];
-                string filePath = string.Concat(TempFolder, "\\", assemblyName, fileExt);
-                if (File.Exists(filePath))
+                foreach(var languageFolderName in DefaultLanguageFolderNames)
+                {
+                    string languageFolderPath = Path.Combine(folderPath, languageFolderName);
+                    if(Directory.Exists(languageFolderPath))
+                    {
+                        string filePath = Path.Combine(languageFolderPath, assemblyName);
+                        if(File.Exists(filePath))
+                        {
+                            return filePath;
+                        }
+                    }
+                }
+            }
+
+            if(!searchSubFolder)
+            {
+                return string.Empty;
+            }
+            DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+            var subFolders = directoryInfo.GetDirectories();
+            foreach(var subFolder in subFolders)
+            {
+                string filePath = SearchAssemblyInFolder(subFolder.FullName, assemblyName, false);
+                if(string.IsNullOrEmpty(filePath))
                 {
                     return filePath;
                 }

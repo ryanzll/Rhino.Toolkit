@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.IO;
+using System.Xml;
 
 namespace Rhino.Toolkit.PlugInLoader
 {
@@ -35,7 +36,9 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public void Save(IList<PlugIn> plugIns)
         {
-            string jsonString = JsonSerializer.Serialize(plugIns);
+            JsonSerializerOptions option = new JsonSerializerOptions();
+            option.WriteIndented = true;
+            string jsonString = JsonSerializer.Serialize(plugIns, option);
             File.WriteAllText(FilePath, jsonString);
         }
     }

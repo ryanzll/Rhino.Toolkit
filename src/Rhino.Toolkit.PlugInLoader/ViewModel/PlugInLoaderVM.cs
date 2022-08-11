@@ -56,6 +56,20 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
 
         public ICommand SelectedItemChangedCommand { get; private set; }
 
+        public ICommand TreeDoubleClickCommand { get; private set; }
+
+        private bool _loadAssemblyManually = false;
+
+        public bool LoadAssemblyManually 
+        {
+            get { return _loadAssemblyManually; }
+            set 
+            {
+                _loadAssemblyManually = value;
+                PlugInLoader.LoadAssemblyManually = value;
+            }
+        }
+
         public Result Result { get; private set; } = Result.Nothing;
 
         public RhinoDoc Doc { get; set; }
@@ -80,6 +94,7 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
             RunCommand = new RelayCommand<Window>((window) => { return true; }, (window) => RunPlugIn(window));
             RemoveCommand = new RelayCommand(() => { return true; }, RemovePlugIn);
             SelectedItemChangedCommand = new RelayCommand<object>((obj) => { return true; }, SelectedItemChanged);
+            TreeDoubleClickCommand = new RelayCommand<Window>((window) => { return true; }, (window) => TreeDoubleClick(window));
         }
 
         protected void LoadPlugIn()
@@ -136,6 +151,11 @@ namespace Rhino.Toolkit.PlugInLoader.ViewModel
         protected void SelectedItemChanged(object obj)
         {
             SelectedPlugInTreeViewItem = obj as TreeViewItemVM;
+        }
+
+        protected void TreeDoubleClick(Window window)
+        {
+            RunPlugIn(window);
         }
     }
 }

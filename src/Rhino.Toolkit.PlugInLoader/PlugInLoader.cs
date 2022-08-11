@@ -16,6 +16,8 @@ namespace Rhino.Toolkit.PlugInLoader
 
         public IList<PlugIn> PlugIns { get; set; }
 
+        public bool LoadAssemblyManually { get; set; }
+
         public PlugInLoader()
         {
             PlugIns = Settings.Load();
@@ -42,7 +44,7 @@ namespace Rhino.Toolkit.PlugInLoader
                 PlugInAssemblyPath = assemblyPath,
                 PlugInAssemblyName = Path.GetFileName(assemblyPath),
             };
-            AssemblyLoader assemblyLoader = new AssemblyLoader();
+            AssemblyLoader assemblyLoader = new AssemblyLoader() { LoadAssemblyManually = LoadAssemblyManually};
             Assembly assembly = assemblyLoader.LoadAddinsFromTempFolder(assemblyPath, true);
             Type commandBaseType = typeof(Command);
             IEnumerable<Type> commandTypes = assembly.GetTypes().Where(t => t.IsClass && commandBaseType.IsAssignableFrom(t));
@@ -79,7 +81,7 @@ namespace Rhino.Toolkit.PlugInLoader
             {
                 throw new ArgumentNullException("plugInCommand");
             }
-            AssemblyLoader assemblyLoader = new AssemblyLoader();
+            AssemblyLoader assemblyLoader = new AssemblyLoader() { LoadAssemblyManually = LoadAssemblyManually };
             assemblyLoader.HookAssemblyResolve();
 
             try
@@ -98,6 +100,11 @@ namespace Rhino.Toolkit.PlugInLoader
                     return Result.Failure;
                 }
                 return (Result)result;
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return Result.Failure;
             }
             finally
             {

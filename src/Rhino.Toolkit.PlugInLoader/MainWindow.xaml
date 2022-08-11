@@ -42,6 +42,9 @@
                         Command="{Binding SelectedItemChangedCommand}"
                         CommandParameter="{Binding SelectedItem, ElementName=treeView}"/>
                     </i:EventTrigger>
+                    <i:EventTrigger EventName="MouseDoubleClick">
+                        <i:InvokeCommandAction Command="{Binding TreeDoubleClickCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"></i:InvokeCommandAction>
+                    </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
@@ -63,6 +66,7 @@
                     <RowDefinition Height="2*"></RowDefinition>
                     <RowDefinition Height="1*"></RowDefinition>
                     <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" Content="Name:" HorizontalAlignment="Left" VerticalAlignment="Center"></Label>
                 <TextBox Grid.Row="1" x:Name="TB_AssemblyName" Text="{Binding SelectedPlugInTreeViewItem.Name}" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2"/>
@@ -70,6 +74,9 @@
                 <TextBox Grid.Row="3" x:Name="TB_AssemblyPath" Text="{Binding SelectedPlugInTreeViewItem.FilePath}" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2" VerticalAlignment="Stretch"/>
                 <Label Grid.Row="4" Content="Note:" HorizontalAlignment="Left" VerticalAlignment="Center" ></Label>
                 <TextBox Grid.Row="5" x:Name="TB_AssemblyInfo" IsReadOnly="True" BorderThickness="1" Margin="0,0,0,2"/>
+                <StackPanel Grid.Row="6" Orientation="Horizontal">
+                    <CheckBox Content="手动加载" IsChecked="{Binding LoadAssemblyManually}"></CheckBox>
+                </StackPanel>
             </Grid>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
@@ -79,7 +86,7 @@
                 </Grid.RowDefinitions>
                 <Button Grid.Row="0" Content="Run" Name="Btn_Run" Width="70" Height="30" Command="{Binding RunCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"></Button>
                 <Button Grid.Row="1" Content="Load" Name="Btn_Load" Width="70" Height="30" Command="{Binding LoadCommand}"></Button>
-                <Button Grid.Row="2" Content="Remove" Name="Btn_Remove" Width="70" Height="30" Command="{Binding RemoveCommand}"></Button>
+                <Button Grid.Row="2" Content="Remove" Name="Btn_Remove" Width="70" Height="30" Command="{Binding RemoveCommand}" Padding="4"></Button>
             </Grid>
         </Grid>
     </Grid>
